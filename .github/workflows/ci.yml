@@ -1,0 +1,71 @@
+name: CI
+
+# Runs the four gates on every pull request targeting main.
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  # 1) Quality gate — lint + format check
+  quality:
+    name: Quality gate (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Install dev dependencies
+        run: pip install -e ".[dev]"
+      - name: ruff check
+        run: ruff check .
+      - name: ruff format --check
+        run: ruff format --check .
+
+  # 2) Test gate — pytest
+  test:
+    name: Test gate (pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Install dev dependencies
+        run: pip install -e ".[dev]"
+      - name: pytest
+        run: pytest -q
+
+  # 3) Security gate — bandit (code) + pip-audit (dependencies)
+  security:
+    name: Security gate (bandit + pip-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Install project + dev dependencies
+        run: pip install -e ".[dev]"
+      - name: bandit (static code analysis)
+        run: bandit -r app
+      - name: pip-audit (dependency vulnerabilities)
+        run: pip-audit
+
+  # 4) Build gate — docker build
+  build:
+    name: Build gate (docker build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: docker build
+        run: docker build -t feature-flag-demo:ci .
