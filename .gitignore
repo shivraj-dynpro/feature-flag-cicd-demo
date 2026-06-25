@@ -27,3 +27,6 @@ Thumbs.db
 # Grafana/Prometheus runtime volumes (if mounted locally)
 monitoring/grafana/data/
 monitoring/prometheus/data/
+
+# Local Claude Code config
+.claude/
