@@ -133,4 +133,4 @@ See [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md) for the full plan. In sho
 8. Prometheus scrapes the metrics
 9. Grafana shows the dashboard
 
-Full runbook lands in Phase 6.
+📖 Full presenter runbook: **[docs/DEMO.md](./docs/DEMO.md)**
