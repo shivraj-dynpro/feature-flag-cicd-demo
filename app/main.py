@@ -8,12 +8,22 @@ Exposes a tiny API around a single feature flag (``NEW_UI``):
 - ``PATCH /flags/{name}`` set or toggle a flag (e.g. ``/flags/NEW_UI``)
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from pydantic import BaseModel
 
 from app.flags import default_store
+from app.observability import (
+    METRICS_CONTENT_TYPE,
+    ObservabilityMiddleware,
+    configure_logging,
+    feature_flag_changes_total,
+    render_metrics,
+)
+
+configure_logging()
 
 app = FastAPI(title="Feature Flag Service", version="0.1.0")
+app.add_middleware(ObservabilityMiddleware)
 
 # Process-memory store (resets on restart — fine for a demo).
 store = default_store()
@@ -32,6 +42,11 @@ class FlagUpdate(BaseModel):
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/metrics")
+def metrics() -> Response:
+    return Response(render_metrics(), media_type=METRICS_CONTENT_TYPE)
 
 
 @app.get("/flags", response_model=list[FlagState])
@@ -56,4 +71,5 @@ def update_flag(name: str, update: FlagUpdate) -> FlagState:
             enabled = store.set(name, update.enabled)
     except KeyError:
         raise HTTPException(status_code=404, detail=f"Unknown flag: {name}") from None
+    feature_flag_changes_total.labels(flag=name).inc()
     return FlagState(name=name, enabled=enabled)
