@@ -1,0 +1,11 @@
+# Prometheus scrape config for the demo.
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  # Scrape the FastAPI app's /metrics endpoint.
+  - job_name: feature-flag-app
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["app:8000"]
