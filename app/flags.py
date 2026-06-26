@@ -7,7 +7,7 @@ obvious place that controls the flag's default value.
 """
 
 # 👇 The one line a developer changes during the demo.
-NEW_UI_DEFAULT = True
+NEW_UI_DEFAULT = False
 
 
 class FlagStore:
